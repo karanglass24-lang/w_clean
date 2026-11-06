@@ -35,7 +35,7 @@ MIT (`LICENSE`). 사용한 오픈소스는 `THIRD-PARTY-NOTICES.md` 참고.
 ```powershell
 dotnet test tests/WClean.Tests
 dotnet run --project src/WClean.App          # Debug: 일반 권한으로 실행
-dotnet publish src/WClean.App -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o artifacts/WClean-0.2.0-win-x64
+dotnet publish src/WClean.App -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o artifacts/WClean-0.2.1-win-x64
 ```
 
 Release 빌드는 관리자 권한을 요청하는 매니페스트(`app.admin.manifest`)를 사용합니다. HKLM 시작프로그램, 레지스트리, `C:\Windows\Temp` 처리에 필요합니다. Debug 빌드는 `asInvoker`입니다.
@@ -53,7 +53,7 @@ tests/WClean.Tests
 Inno Setup 6 필요.
 
 ```powershell
-.\scripts\build-installer.ps1 -Version 0.2.0
+.\scripts\build-installer.ps1 -Version 0.2.1
 ```
 
-결과: `artifacts\WClean-0.2.0-win-x64-setup.exe` (한국어/영어, `Program Files\W Clean` 설치, 시작 메뉴 바로가기, 바탕화면 아이콘 선택).
+결과: `artifacts\WClean-0.2.1-win-x64-setup.exe` (한국어/영어, `Program Files\W Clean` 설치, 시작 메뉴 바로가기, 바탕화면 아이콘 선택).
