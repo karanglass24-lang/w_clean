@@ -45,6 +45,34 @@ public sealed class LargeFileViewModel : PageViewModel
 
     public int ResultCount => Results.Count;
 
+    /// <summary>Header checkbox: true when every row is checked.</summary>
+    public bool AllChecked
+    {
+        get => Results.Count > 0 && Results.All(r => r.IsChecked);
+        set
+        {
+            foreach (var r in Results) r.IsChecked = value;
+            Raise(nameof(AllChecked)); Raise(nameof(CheckedText));
+        }
+    }
+
+    public string CheckedText
+    {
+        get
+        {
+            var c = Results.Where(r => r.IsChecked).ToList();
+            return c.Count == 0 ? "선택한 파일 없음" : $"{c.Count}개 선택 · {SizeFormat.ToText(c.Sum(r => r.Size))}";
+        }
+    }
+
+    private void OnRowChanged(object? s, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(LargeFileInfo.IsChecked)) return;
+        Raise(nameof(AllChecked)); Raise(nameof(CheckedText));
+    }
+
+    public ICommand SelectAllCommand { get; }
+    public ICommand SelectNoneCommand { get; }
     public ICommand BrowseCommand { get; }
     public ICommand ScanCommand { get; }
     public ICommand CancelCommand { get; }
@@ -63,14 +91,16 @@ public sealed class LargeFileViewModel : PageViewModel
         Status = "폴더나 드라이브를 선택하고 ‘검색’을 누르세요.";
 
         static bool Has(object? p) => p is IList { Count: > 0 };
+        SelectAllCommand = new RelayCommand(_ => AllChecked = true, _ => Results.Count > 0);
+        SelectNoneCommand = new RelayCommand(_ => AllChecked = false, _ => Results.Count > 0);
         BrowseCommand = new RelayCommand(_ => Browse(), _ => !IsScanning);
         ScanCommand = new AsyncRelayCommand(_ => ScanAsync(), _ => !IsScanning);
         CancelCommand = new RelayCommand(_ => _cts?.Cancel(), _ => IsScanning);
-        DeleteCommand = new AsyncRelayCommand(DeleteAsync, p => Has(p) && !IsScanning);
+        DeleteCommand = new AsyncRelayCommand(_ => DeleteAsync(), _ => Results.Any(r => r.IsChecked) && !IsScanning);
         OpenLocationCommand = new RelayCommand(p =>
         {
-            foreach (var f in ((IList)p!).Cast<LargeFileInfo>().Take(5)) Dialogs.RevealInExplorer(f.Path);
-        }, Has);
+            foreach (var f in Results.Where(r => r.IsChecked).Take(5)) Dialogs.RevealInExplorer(f.Path);
+        }, _ => Results.Any(r => r.IsChecked));
     }
 
     private void Browse()
@@ -82,7 +112,7 @@ public sealed class LargeFileViewModel : PageViewModel
 
     private void UpdateSummary()
     {
-        Raise(nameof(ResultCount));
+        Raise(nameof(ResultCount)); Raise(nameof(AllChecked)); Raise(nameof(CheckedText));
         TotalText = Results.Count == 0 ? "—" : SizeFormat.ToText(Results.Sum(r => r.Size));
         LargestText = Results.Count == 0 ? "—" : SizeFormat.ToText(Results.Max(r => r.Size));
         Badge = Results.Count > 0 ? Results.Count.ToString() : "";
@@ -104,7 +134,7 @@ public sealed class LargeFileViewModel : PageViewModel
         try
         {
             var found = await Task.Run(() => _svc.Scan(new[] { root }, min, 500, progress, ct));
-            foreach (var f in found) Results.Add(f);
+            foreach (var f in found) { f.PropertyChanged += OnRowChanged; Results.Add(f); }
             UpdateSummary();
             Status = (ct.IsCancellationRequested ? "검색 중지됨 · " : "검색 완료 · ") + $"{found.Count}개 파일을 찾았습니다.";
         }
@@ -116,9 +146,9 @@ public sealed class LargeFileViewModel : PageViewModel
         }
     });
 
-    private async Task DeleteAsync(object? p)
+    private async Task DeleteAsync()
     {
-        var items = ((IList)p!).Cast<LargeFileInfo>().ToList();
+        var items = Results.Where(r => r.IsChecked).ToList();
         long size = items.Sum(i => i.Size);
         var how = UseRecycleBin ? "휴지통으로 이동" : "영구 삭제";
         if (!Dialogs.Confirm($"선택한 {items.Count}개 파일({SizeFormat.ToText(size)})을 {how}할까요?" +
@@ -144,6 +174,7 @@ public sealed class LargeFileViewModel : PageViewModel
         });
 
         foreach (var r in removed) Results.Remove(r);
+        Raise(nameof(AllChecked)); Raise(nameof(CheckedText));
         UpdateSummary();
         if (removed.Count > 0) HistoryService.Add("대용량파일 삭제", removed.Sum(r => r.Size), removed.Count);
         Status = $"{removed.Count}개 파일 삭제 · {SizeFormat.ToText(removed.Sum(r => r.Size))} 확보";

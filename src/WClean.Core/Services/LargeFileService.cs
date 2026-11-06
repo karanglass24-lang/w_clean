@@ -2,13 +2,26 @@ using System.IO.Enumeration;
 
 namespace WClean;
 
-public sealed record LargeFileInfo(string Path, long Size, DateTime Modified)
+public sealed class LargeFileInfo : ObservableObject
 {
+    public LargeFileInfo(string path, long size, DateTime modified)
+    {
+        Path = path;
+        Size = size;
+        Modified = modified;
+    }
+
+    public string Path { get; }
+    public long Size { get; }
+    public DateTime Modified { get; }
     public string Name => System.IO.Path.GetFileName(Path);
     public string Directory => System.IO.Path.GetDirectoryName(Path) ?? "";
     public string SizeText => SizeFormat.ToText(Size);
     /// <summary>Size relative to the biggest result (0..1).</summary>
-    public double Ratio { get; init; }
+    public double Ratio { get; set; }
+
+    private bool _isChecked;
+    public bool IsChecked { get => _isChecked; set => Set(ref _isChecked, value); }
 }
 
 public sealed class LargeFileService
@@ -68,6 +81,7 @@ public sealed class LargeFileService
         var top = results.OrderByDescending(r => r.Size).Take(maxResults).ToList();
         if (top.Count == 0) return top;
         double max = top[0].Size;
-        return top.Select(r => r with { Ratio = r.Size / max }).ToList();
+        foreach (var r in top) r.Ratio = r.Size / max;
+        return top;
     }
 }

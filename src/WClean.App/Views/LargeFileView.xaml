@@ -44,12 +44,13 @@
         </Border>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,14,0,12">
-            <Button Style="{StaticResource BtnDanger}" Tag="&#xE74D;" Content="선택 파일 삭제" Command="{Binding DeleteCommand}"
-                    CommandParameter="{Binding SelectedItems, ElementName=Grid}" />
-            <Button Style="{StaticResource Btn}" Tag="&#xE838;" Content="파일 위치" Command="{Binding OpenLocationCommand}"
-                    CommandParameter="{Binding SelectedItems, ElementName=Grid}" />
-            <CheckBox VerticalAlignment="Center" Margin="8,0,0,0" Content="휴지통으로 이동 (해제하면 영구 삭제)"
+            <Button Style="{StaticResource BtnDanger}" Tag="&#xE74D;" Content="선택 파일 삭제" Command="{Binding DeleteCommand}" />
+            <Button Style="{StaticResource Btn}" Content="모두 선택" Command="{Binding SelectAllCommand}" />
+            <Button Style="{StaticResource Btn}" Content="모두 해제" Command="{Binding SelectNoneCommand}" />
+            <Button Style="{StaticResource Btn}" Tag="&#xE838;" Content="파일 위치" Command="{Binding OpenLocationCommand}" />
+            <CheckBox VerticalAlignment="Center" Margin="8,0,12,0" Content="휴지통으로 이동 (해제하면 영구 삭제)"
                       IsChecked="{Binding UseRecycleBin}" />
+            <TextBlock VerticalAlignment="Center" Style="{StaticResource Small}" Text="{Binding CheckedText}" />
         </StackPanel>
 
         <Border Grid.Row="4" Style="{StaticResource Card}" Padding="10,4,10,10">
@@ -57,6 +58,18 @@
                 <DataGrid x:Name="Grid" Style="{StaticResource Grid}" ItemsSource="{Binding Results}"
                           IsReadOnly="True" SelectionMode="Extended" RowHeight="56">
                     <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="48">
+                            <DataGridTemplateColumn.Header>
+                                <CheckBox HorizontalAlignment="Center" MinWidth="0" ToolTip="전체 선택 / 해제"
+                                          IsChecked="{Binding DataContext.AllChecked, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox HorizontalAlignment="Center" MinWidth="0" IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
                         <DataGridTemplateColumn Header="크기" Width="190">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
