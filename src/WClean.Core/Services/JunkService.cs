@@ -37,6 +37,13 @@ public sealed class JunkCategory : ObservableObject
         set { if (Set(ref _count, value)) Raise(nameof(SizeText)); }
     }
 
+    private double _ratio;
+    /// <summary>Size relative to the biggest category (0..1), for the bar in the list.</summary>
+    public double Ratio { get => _ratio; set => Set(ref _ratio, value); }
+
+    /// <summary>Segoe Fluent Icons glyph.</summary>
+    public string Glyph { get; set; } = "";
+
     private bool _scanned;
     public bool Scanned
     {

@@ -7,6 +7,8 @@ public sealed record LargeFileInfo(string Path, long Size, DateTime Modified)
     public string Name => System.IO.Path.GetFileName(Path);
     public string Directory => System.IO.Path.GetDirectoryName(Path) ?? "";
     public string SizeText => SizeFormat.ToText(Size);
+    /// <summary>Size relative to the biggest result (0..1).</summary>
+    public double Ratio { get; init; }
 }
 
 public sealed class LargeFileService
@@ -63,6 +65,9 @@ public sealed class LargeFileService
         }
         catch (OperationCanceledException) { /* return what was found so far */ }
 
-        return results.OrderByDescending(r => r.Size).Take(maxResults).ToList();
+        var top = results.OrderByDescending(r => r.Size).Take(maxResults).ToList();
+        if (top.Count == 0) return top;
+        double max = top[0].Size;
+        return top.Select(r => r with { Ratio = r.Size / max }).ToList();
     }
 }

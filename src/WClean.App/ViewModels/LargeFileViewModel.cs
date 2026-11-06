@@ -6,10 +6,14 @@ namespace WClean.App.ViewModels;
 
 public sealed record SizeOption(string Text, long Bytes);
 
-public sealed class LargeFileViewModel : ObservableObject
+public sealed class LargeFileViewModel : PageViewModel
 {
     private readonly LargeFileService _svc = new();
     private CancellationTokenSource? _cts;
+
+    public override string Title => "대용량파일 정리";
+    public override string Description => "폴더나 드라이브에서 용량을 많이 차지하는 파일을 크기순으로 찾습니다. Windows 폴더는 제외됩니다.";
+    public override string Glyph => "";
 
     public ObservableCollection<LargeFileInfo> Results { get; } = new();
     public IReadOnlyList<string> Locations { get; }
@@ -33,8 +37,13 @@ public sealed class LargeFileViewModel : ObservableObject
     private bool _isScanning;
     public bool IsScanning { get => _isScanning; private set => Set(ref _isScanning, value); }
 
-    private string _status = "폴더나 드라이브를 선택하고 ‘검색’을 누르세요.";
-    public string Status { get => _status; private set => Set(ref _status, value); }
+    private string _totalText = "—";
+    public string TotalText { get => _totalText; private set => Set(ref _totalText, value); }
+
+    private string _largestText = "—";
+    public string LargestText { get => _largestText; private set => Set(ref _largestText, value); }
+
+    public int ResultCount => Results.Count;
 
     public ICommand BrowseCommand { get; }
     public ICommand ScanCommand { get; }
@@ -51,6 +60,7 @@ public sealed class LargeFileViewModel : ObservableObject
         Locations = locs;
         _searchPath = profile;
         _selectedMin = MinSizes[1];
+        Status = "폴더나 드라이브를 선택하고 ‘검색’을 누르세요.";
 
         static bool Has(object? p) => p is IList { Count: > 0 };
         BrowseCommand = new RelayCommand(_ => Browse(), _ => !IsScanning);
@@ -70,7 +80,15 @@ public sealed class LargeFileViewModel : ObservableObject
         if (dlg.ShowDialog() == true) SearchPath = dlg.FolderName;
     }
 
-    private async Task ScanAsync()
+    private void UpdateSummary()
+    {
+        Raise(nameof(ResultCount));
+        TotalText = Results.Count == 0 ? "—" : SizeFormat.ToText(Results.Sum(r => r.Size));
+        LargestText = Results.Count == 0 ? "—" : SizeFormat.ToText(Results.Max(r => r.Size));
+        Badge = Results.Count > 0 ? Results.Count.ToString() : "";
+    }
+
+    private Task ScanAsync() => BusyAsync(async () =>
     {
         var root = SearchPath.Trim().Trim('"');
         if (!Directory.Exists(root)) { Dialogs.Error("존재하지 않는 경로입니다."); return; }
@@ -78,6 +96,7 @@ public sealed class LargeFileViewModel : ObservableObject
         _cts = new CancellationTokenSource();
         IsScanning = true;
         Results.Clear();
+        UpdateSummary();
         var progress = new Progress<string>(p => Status = $"검색 중… {p}");
         var min = SelectedMin.Bytes;
         var ct = _cts.Token;
@@ -86,8 +105,8 @@ public sealed class LargeFileViewModel : ObservableObject
         {
             var found = await Task.Run(() => _svc.Scan(new[] { root }, min, 500, progress, ct));
             foreach (var f in found) Results.Add(f);
-            Status = (ct.IsCancellationRequested ? "검색 중지됨 · " : "검색 완료 · ") +
-                     $"{found.Count}개 파일 · 합계 {SizeFormat.ToText(found.Sum(f => f.Size))}";
+            UpdateSummary();
+            Status = (ct.IsCancellationRequested ? "검색 중지됨 · " : "검색 완료 · ") + $"{found.Count}개 파일을 찾았습니다.";
         }
         finally
         {
@@ -95,7 +114,7 @@ public sealed class LargeFileViewModel : ObservableObject
             _cts.Dispose();
             _cts = null;
         }
-    }
+    });
 
     private async Task DeleteAsync(object? p)
     {
@@ -125,6 +144,7 @@ public sealed class LargeFileViewModel : ObservableObject
         });
 
         foreach (var r in removed) Results.Remove(r);
+        UpdateSummary();
         Status = $"{removed.Count}개 파일 삭제 · {SizeFormat.ToText(removed.Sum(r => r.Size))} 확보";
         if (failed.Count > 0) Dialogs.Error("삭제하지 못한 파일:\n\n" + string.Join("\n", failed.Take(10)));
     }

@@ -12,4 +12,10 @@ public partial class App : Application
             e.Handled = true;
         };
     }
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        ThemeManager.Apply(ThemeManager.LoadPreference());
+        base.OnStartup(e);
+    }
 }

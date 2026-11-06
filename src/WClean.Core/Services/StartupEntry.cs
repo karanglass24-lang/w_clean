@@ -19,6 +19,16 @@ public sealed class StartupEntry : ObservableObject
         set { if (Set(ref _isEnabled, value)) Raise(nameof(StatusText)); }
     }
 
+    /// <summary>Re-raises IsEnabled so a toggle that was undone by an error snaps back in the UI.</summary>
+    public void NotifyEnabledChanged() { Raise(nameof(IsEnabled)); Raise(nameof(StatusText)); }
+
+    public string Glyph => Kind switch
+    {
+        StartupKind.Registry => "",
+        StartupKind.Folder => "",
+        _ => "",
+    };
+
     public string StatusText => IsEnabled ? "사용" : "사용 안 함";
     public string MissingText => TargetMissing ? "파일 없음" : "";
 

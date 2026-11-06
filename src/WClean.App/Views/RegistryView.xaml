@@ -1,0 +1,100 @@
+<UserControl x:Class="WClean.App.Views.RegistryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:WClean.App.Controls">
+    <Grid Margin="32,28,32,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Style="{StaticResource H1}" Text="{Binding Title}" />
+            <TextBlock Style="{StaticResource Sub}" Margin="0,4,0,0" Text="{Binding Description}" />
+        </StackPanel>
+
+        <UniformGrid Grid.Row="1" Rows="1" Margin="0,22,0,0">
+            <c:StatTile Margin="0,0,12,0" Label="발견된 항목" Value="{Binding FoundCount}" Glyph="&#xE721;" Tone="{DynamicResource AccentBrush}" />
+            <c:StatTile Margin="0,0,12,0" Label="선택한 항목" Value="{Binding SelectedCount}" Glyph="&#xE73A;" Tone="{DynamicResource SuccessBrush}" />
+            <c:StatTile Label="문제 종류" Value="{Binding CategoryCount}" Glyph="&#xE8FD;" Tone="{DynamicResource WarnBrush}" />
+        </UniformGrid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,20,0,12">
+            <Button Style="{StaticResource BtnPrimary}" Tag="&#xE721;" Content="검사" Command="{Binding ScanCommand}" />
+            <Button Style="{StaticResource BtnDanger}" Tag="&#xE74D;" Content="선택 항목 삭제" Command="{Binding FixCommand}" />
+            <Button Style="{StaticResource Btn}" Content="모두 선택" Command="{Binding SelectAllCommand}" />
+            <Button Style="{StaticResource Btn}" Content="모두 해제" Command="{Binding SelectNoneCommand}" />
+            <Button Style="{StaticResource Btn}" Tag="&#xE838;" Content="백업 폴더" Command="{Binding OpenBackupFolderCommand}" />
+        </StackPanel>
+
+        <Border Grid.Row="3" Style="{StaticResource Card}" Padding="10,4,10,10">
+            <Grid>
+                <DataGrid x:Name="Grid" Style="{StaticResource Grid}" ItemsSource="{Binding Issues}"
+                          SelectionMode="Single" IsReadOnly="False" RowHeight="58">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="46" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox MinWidth="0" HorizontalAlignment="Center"
+                                              IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="종류" Width="170" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource Chip}">
+                                        <TextBlock Text="{Binding Category}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="이름" Width="200" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Style="{StaticResource Cell}" FontWeight="SemiBold" Text="{Binding Name}" ToolTip="{Binding Name}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="문제 / 경로" Width="*" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center" ToolTip="{Binding KeyPath}">
+                                        <TextBlock Style="{StaticResource Cell}" Text="{Binding Problem}" />
+                                        <TextBlock Style="{StaticResource Small}" Text="{Binding KeyPath}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Items.Count, ElementName=Grid}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Style="{StaticResource Icon}" FontSize="40" Foreground="{DynamicResource TrackBrush}" Text="&#xE8F1;" />
+                    <TextBlock Style="{StaticResource Sub}" Margin="0,10,0,0" HorizontalAlignment="Center" Text="‘검사’를 눌러 잘못된 항목을 찾아보세요" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <DockPanel Grid.Row="4" Margin="0,12,0,0" LastChildFill="True">
+            <ProgressBar DockPanel.Dock="Right" Width="140" Height="4" IsIndeterminate="True" VerticalAlignment="Center"
+                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+            <TextBlock Style="{StaticResource Small}" Text="{Binding Status}" VerticalAlignment="Center" />
+        </DockPanel>
+    </Grid>
+</UserControl>

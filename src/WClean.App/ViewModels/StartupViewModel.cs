@@ -4,17 +4,23 @@ using System.Windows.Input;
 
 namespace WClean.App.ViewModels;
 
-public sealed class StartupViewModel : ObservableObject
+public sealed class StartupViewModel : PageViewModel
 {
     private readonly StartupService _svc = new();
 
+    public override string Title => "시작프로그램";
+    public override string Description => "Windows가 켜질 때 자동으로 실행되는 프로그램을 관리합니다. 끄면 언제든 다시 켤 수 있습니다.";
+    public override string Glyph => "";
+
     public ObservableCollection<StartupEntry> Entries { get; } = new();
 
-    private string _status = "";
-    public string Status { get => _status; private set => Set(ref _status, value); }
+    public int Total => Entries.Count;
+    public int EnabledCount => Entries.Count(e => e.IsEnabled);
+    public int DisabledCount => Entries.Count(e => !e.IsEnabled);
+    public int MissingCount => Entries.Count(e => e.TargetMissing);
 
     public ICommand RefreshCommand { get; }
-    public ICommand EnableCommand { get; }
+    public ICommand ToggleCommand { get; }
     public ICommand DisableCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand OpenLocationCommand { get; }
@@ -23,38 +29,55 @@ public sealed class StartupViewModel : ObservableObject
     {
         static bool Has(object? p) => p is IList { Count: > 0 };
         RefreshCommand = new AsyncRelayCommand(_ => RefreshAsync());
-        EnableCommand = new AsyncRelayCommand(p => SetEnabledAsync(p, true), Has);
-        DisableCommand = new AsyncRelayCommand(p => SetEnabledAsync(p, false), Has);
+        ToggleCommand = new AsyncRelayCommand(ToggleAsync);
+        DisableCommand = new AsyncRelayCommand(DisableAsync, Has);
         DeleteCommand = new AsyncRelayCommand(DeleteAsync, Has);
         OpenLocationCommand = new RelayCommand(OpenLocation, Has);
     }
 
-    public async Task RefreshAsync()
+    public Task RefreshAsync() => BusyAsync(async () =>
     {
-        Status = "불러오는 중…";
+        Status = "시작프로그램을 불러오는 중…";
         var list = await Task.Run(_svc.Load);
         Entries.Clear();
         foreach (var e in list) Entries.Add(e);
         UpdateSummary();
-    }
+    });
 
     private void UpdateSummary()
     {
-        int on = Entries.Count(e => e.IsEnabled);
-        Status = $"총 {Entries.Count}개 · 사용 {on}개 · 사용 안 함 {Entries.Count - on}개";
+        Raise(nameof(Total)); Raise(nameof(EnabledCount)); Raise(nameof(DisabledCount)); Raise(nameof(MissingCount));
+        Badge = Entries.Count == 0 ? "" : Entries.Count.ToString();
+        Status = $"총 {Entries.Count}개 중 {EnabledCount}개가 시작 시 실행됩니다.";
     }
 
     private static List<StartupEntry> Selected(object? p) => ((IList)p!).Cast<StartupEntry>().ToList();
 
-    private async Task SetEnabledAsync(object? p, bool enabled)
+    private async Task ToggleAsync(object? p)
     {
-        var items = Selected(p);
+        if (p is not StartupEntry e) return;
+        bool target = !e.IsEnabled;     // the switch has already flipped visually; model still holds the old value
+        try
+        {
+            await Task.Run(() => _svc.SetEnabled(e, target));
+            UpdateSummary();
+        }
+        catch (Exception ex)
+        {
+            e.NotifyEnabledChanged();   // snap the switch back
+            Dialogs.Error($"'{e.Name}' 항목을 변경하지 못했습니다.\n관리자 권한으로 실행했는지 확인하세요.\n\n{ex.Message}");
+        }
+    }
+
+    private async Task DisableAsync(object? p)
+    {
+        var items = Selected(p).Where(i => i.IsEnabled).ToList();
         var failed = new List<string>();
         await Task.Run(() =>
         {
             foreach (var e in items)
             {
-                try { _svc.SetEnabled(e, enabled); }
+                try { _svc.SetEnabled(e, false); }
                 catch (Exception ex) { failed.Add($"{e.Name}: {ex.Message}"); }
             }
         });
@@ -72,12 +95,11 @@ public sealed class StartupViewModel : ObservableObject
             return;
 
         var failed = new List<string>();
-        string? lastBackup = null;
         await Task.Run(() =>
         {
             foreach (var e in items)
             {
-                try { lastBackup = _svc.Delete(e) ?? lastBackup; }
+                try { _svc.Delete(e); }
                 catch (Exception ex) { failed.Add($"{e.Name}: {ex.Message}"); }
             }
         });
@@ -85,8 +107,8 @@ public sealed class StartupViewModel : ObservableObject
 
         if (failed.Count > 0)
             Dialogs.Error("일부 항목을 삭제하지 못했습니다. 관리자 권한으로 실행했는지 확인하세요.\n\n" + string.Join("\n", failed));
-        else if (lastBackup is not null)
-            Status += $"  ·  백업 폴더: {BackupStore.Directory}";
+        else
+            Status = $"{items.Count}개 삭제 완료 · 백업 폴더: {BackupStore.Directory}";
     }
 
     private void OpenLocation(object? p)

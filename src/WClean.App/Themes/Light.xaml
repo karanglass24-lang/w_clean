@@ -1,0 +1,25 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="BgBrush" Color="#F2F4F9" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="LineBrush" Color="#E3E6EE" />
+    <SolidColorBrush x:Key="TextBrush" Color="#1A1C24" />
+    <SolidColorBrush x:Key="SubTextBrush" Color="#6A7082" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#4F6BED" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#E8ECFE" />
+    <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#D6393F" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="#FDE8EA" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#168A4A" />
+    <SolidColorBrush x:Key="SuccessSoftBrush" Color="#E0F4E8" />
+    <SolidColorBrush x:Key="WarnBrush" Color="#B25E00" />
+    <SolidColorBrush x:Key="WarnSoftBrush" Color="#FFF1D6" />
+    <SolidColorBrush x:Key="TrackBrush" Color="#E6E9F1" />
+    <SolidColorBrush x:Key="RowHoverBrush" Color="#F5F7FC" />
+    <SolidColorBrush x:Key="RowSelectedBrush" Color="#E8ECFE" />
+    <SolidColorBrush x:Key="HoverOverlay" Color="#14000000" />
+    <LinearGradientBrush x:Key="LogoBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#6F8BFF" Offset="0" />
+        <GradientStop Color="#8A5CF6" Offset="1" />
+    </LinearGradientBrush>
+</ResourceDictionary>
