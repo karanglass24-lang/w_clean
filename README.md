@@ -35,3 +35,13 @@ src/WClean.Core   서비스(시작프로그램/쓰레기/레지스트리/대용�
 src/WClean.App    WPF UI (MVVM)
 tests/WClean.Tests
 ```
+
+## 설치 파일 빌드
+
+Inno Setup 6 필요.
+
+```powershell
+.\scripts\build-installer.ps1 -Version 0.1.0
+```
+
+결과: `artifacts\WClean-0.1.0-win-x64-setup.exe` (한국어/영어, `Program Files\W Clean` 설치, 시작 메뉴 바로가기, 바탕화면 아이콘 선택).
