@@ -21,6 +21,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\WClean.exe
 UninstallDisplayName=W Clean
 CloseApplications=yes
+SetupIconFile=..\assets\WClean.ico
 OutputBaseFilename=WClean-{#AppVersion}-win-x64-setup
 OutputDir=..\artifacts
 Compression=lzma2/max
