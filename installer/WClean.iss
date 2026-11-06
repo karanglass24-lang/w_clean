@@ -42,4 +42,4 @@ Name: "{autoprograms}\W Clean"; Filename: "{app}\WClean.exe"
 Name: "{autodesktop}\W Clean"; Filename: "{app}\WClean.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\WClean.exe"; Description: "{cm:LaunchProgram,W Clean}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\WClean.exe"; Description: "{cm:LaunchProgram,W Clean}"; Flags: nowait postinstall skipifsilent shellexec
