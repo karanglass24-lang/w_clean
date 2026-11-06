@@ -7,6 +7,11 @@ namespace WClean.App.ViewModels;
 public sealed class StartupViewModel : PageViewModel
 {
     private readonly StartupService _svc = new();
+    private readonly BootImpactService _boot = new();
+
+    private bool _bootUnavailable;
+    private string _bootTimeText = "—";
+    public string BootTimeText { get => _bootTimeText; private set => Set(ref _bootTimeText, value); }
 
     public override string Title => "시작프로그램";
     public override string Description => "Windows가 켜질 때 자동으로 실행되는 프로그램을 관리합니다. 끄면 언제든 다시 켤 수 있습니다.";
@@ -41,6 +46,14 @@ public sealed class StartupViewModel : PageViewModel
         var list = await Task.Run(_svc.Load);
         Entries.Clear();
         foreach (var e in list) Entries.Add(e);
+        var impact = await Task.Run(() => _boot.Load());
+        _bootUnavailable = !impact.Available;
+        BootTimeText = impact.LastBootMs is { } ms ? $"{ms / 1000.0:0.#}초" : (impact.Available ? "기록 없음" : "—");
+        foreach (var e in list)
+        {
+            var exe = PathHelper.ExtractExecutable(e.Command);
+            if (exe is not null && impact.DelayMsByFile.TryGetValue(Path.GetFileName(exe), out var d)) e.ImpactMs = d;
+        }
         UpdateSummary();
     });
 
@@ -48,7 +61,8 @@ public sealed class StartupViewModel : PageViewModel
     {
         Raise(nameof(Total)); Raise(nameof(EnabledCount)); Raise(nameof(DisabledCount)); Raise(nameof(MissingCount));
         Badge = Entries.Count == 0 ? "" : Entries.Count.ToString();
-        Status = $"총 {Entries.Count}개 중 {EnabledCount}개가 시작 시 실행됩니다.";
+        Status = $"총 {Entries.Count}개 중 {EnabledCount}개가 시작 시 실행됩니다." +
+                 (_bootUnavailable ? " · 부팅 영향은 관리자 권한으로 실행하면 표시됩니다." : "");
     }
 
     private static List<StartupEntry> Selected(object? p) => ((IList)p!).Cast<StartupEntry>().ToList();

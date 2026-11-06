@@ -145,6 +145,7 @@ public sealed class LargeFileViewModel : PageViewModel
 
         foreach (var r in removed) Results.Remove(r);
         UpdateSummary();
+        if (removed.Count > 0) HistoryService.Add("대용량파일 삭제", removed.Sum(r => r.Size), removed.Count);
         Status = $"{removed.Count}개 파일 삭제 · {SizeFormat.ToText(removed.Sum(r => r.Size))} 확보";
         if (failed.Count > 0) Dialogs.Error("삭제하지 못한 파일:\n\n" + string.Join("\n", failed.Take(10)));
     }

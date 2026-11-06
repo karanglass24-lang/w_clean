@@ -25,7 +25,17 @@ public sealed class JunkViewModel : PageViewModel
         ["Edge 캐시"] = "",
         ["Whale 캐시"] = "",
         ["Firefox 캐시"] = "",
+        ["배달 최적화 캐시"] = "E896",
+        ["메신저·앱 캐시"] = "E8F2",
+        ["개발 도구 캐시"] = "E943",
     };
+
+    static JunkViewModel()
+    {
+        Glyphs["배달 최적화 캐시"] = "";
+        Glyphs["메신저·앱 캐시"] = "";
+        Glyphs["개발 도구 캐시"] = "";
+    }
 
     public ObservableCollection<JunkCategory> Categories { get; } = new();
 
@@ -107,6 +117,7 @@ public sealed class JunkViewModel : PageViewModel
         var result = await _svc.CleanAsync(targets, progress);
         foreach (var c in targets) { c.Size = 0; c.Count = 0; c.Ratio = 0; }
         UpdateSummary();
+        if (result.FreedBytes > 0 || result.Deleted > 0) HistoryService.Add("쓰레기파일 정리", result.FreedBytes, result.Deleted);
         Status = $"정리 완료 · {SizeFormat.ToText(result.FreedBytes)} 확보 · 삭제 {result.Deleted:N0}개" +
                  (result.Skipped > 0 ? $" · 사용 중이라 건너뜀 {result.Skipped:N0}개" : "");
     });

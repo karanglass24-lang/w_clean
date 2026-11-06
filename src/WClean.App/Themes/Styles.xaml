@@ -150,7 +150,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Grid Margin="0,2" Height="46">
+                    <Grid Margin="0,1" Height="40">
                         <Border x:Name="Bg" CornerRadius="10" Background="Transparent" />
                         <Border x:Name="Bar" Width="3" Height="20" CornerRadius="2" HorizontalAlignment="Left"
                                 Margin="0" Background="{DynamicResource AccentBrush}" Visibility="Collapsed" />

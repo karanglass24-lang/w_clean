@@ -68,6 +68,7 @@ public sealed class RegistryViewModel : PageViewModel
 
         Status = "정리 중…";
         var result = await Task.Run(() => _svc.Fix(targets));
+        if (result.Fixed > 0) HistoryService.Add("레지스트리 정리", 0, result.Fixed);
 
         if (result.Failed == 0)
         {

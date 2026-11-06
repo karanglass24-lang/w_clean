@@ -18,7 +18,7 @@ public partial class MainWindow : Window
         if (int.TryParse(page, out var idx) && idx >= 0 && idx < _vm.Items.Count) _vm.Items[idx].IsSelected = true;
 
         var path = args.FirstOrDefault(a => a.StartsWith("--path="))?[7..];
-        if (path is not null) _vm.Large.SearchPath = path;
+        if (path is not null) { _vm.Large.SearchPath = path; _vm.Duplicates.SearchPath = path; _vm.Disk.CurrentPath = path; }
 
         Loaded += async (_, _) =>
         {
@@ -30,6 +30,9 @@ public partial class MainWindow : Window
                     case JunkViewModel j: j.ScanCommand.Execute(null); break;
                     case RegistryViewModel r: r.ScanCommand.Execute(null); break;
                     case LargeFileViewModel l: l.ScanCommand.Execute(null); break;
+                    case DuplicateViewModel d: d.ScanCommand.Execute(null); break;
+                    case DiskViewModel k: k.ScanCommand.Execute(null); break;
+                    case TidyViewModel t: t.ScanCommand.Execute(null); break;
                 }
             }
         };

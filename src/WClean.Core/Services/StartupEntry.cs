@@ -29,6 +29,16 @@ public sealed class StartupEntry : ObservableObject
         _ => "",
     };
 
+    private long _impactMs;
+    /// <summary>Boot delay measured by Windows (0 = nothing recorded).</summary>
+    public long ImpactMs
+    {
+        get => _impactMs;
+        set { if (Set(ref _impactMs, value)) { Raise(nameof(ImpactText)); Raise(nameof(HasImpact)); } }
+    }
+    public bool HasImpact => ImpactMs > 0;
+    public string ImpactText => ImpactMs > 0 ? BootImpactService.ImpactText(ImpactMs) : "";
+
     public string StatusText => IsEnabled ? "사용" : "사용 안 함";
     public string MissingText => TargetMissing ? "파일 없음" : "";
 

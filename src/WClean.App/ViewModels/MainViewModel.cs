@@ -19,11 +19,36 @@ public sealed class MainViewModel : ObservableObject
     public JunkViewModel Junk { get; } = new();
     public RegistryViewModel Registry { get; } = new();
     public LargeFileViewModel Large { get; } = new();
+    public DuplicateViewModel Duplicates { get; } = new();
+    public DiskViewModel Disk { get; } = new();
+    public ProgramsViewModel Programs { get; } = new();
+    public ServicesViewModel Services { get; } = new();
+    public TidyViewModel Tidy { get; } = new();
+    public BackupViewModel Backup { get; } = new();
+    public HistoryViewModel History { get; } = new();
 
     public IReadOnlyList<NavItem> Items { get; }
 
     private NavItem _selected;
-    public NavItem Selected { get => _selected; private set => Set(ref _selected, value); }
+    public NavItem Selected
+    {
+        get => _selected;
+        private set { if (Set(ref _selected, value)) OnPageSelected(value.Page); }
+    }
+
+    private bool _programsLoaded, _servicesLoaded;
+
+    /// <summary>Heavier lists are loaded the first time their page is opened.</summary>
+    private void OnPageSelected(PageViewModel page)
+    {
+        switch (page)
+        {
+            case ProgramsViewModel p when !_programsLoaded: _programsLoaded = true; _ = p.LoadAsync(); break;
+            case ServicesViewModel s when !_servicesLoaded: _servicesLoaded = true; _ = s.LoadAsync(); break;
+            case BackupViewModel b: b.Load(); break;
+            case HistoryViewModel h: h.Load(); break;
+        }
+    }
 
     public bool IsAdmin { get; } = Elevation.IsAdmin();
     public bool NotAdmin => !IsAdmin;
@@ -36,13 +61,21 @@ public sealed class MainViewModel : ObservableObject
         set { if (Set(ref _isDark, value)) ThemeManager.Apply(value, save: true); }
     }
 
+    private string _updateBadge = "";
+    public string UpdateBadge { get => _updateBadge; private set { if (Set(ref _updateBadge, value)) Raise(nameof(HasUpdateBadge)); } }
+    public bool HasUpdateBadge => UpdateBadge.Length > 0;
+
     public ICommand RestartAsAdminCommand { get; }
 
     public string Version { get; } = "v" + (typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "0.1.0");
 
     public MainViewModel()
     {
-        Items = new[] { new NavItem(Startup), new NavItem(Junk), new NavItem(Registry), new NavItem(Large) };
+        Items = new[]
+        {
+            new NavItem(Startup), new NavItem(Junk), new NavItem(Registry), new NavItem(Large), new NavItem(Duplicates), new NavItem(Disk),
+            new NavItem(Programs), new NavItem(Services), new NavItem(Tidy), new NavItem(Backup), new NavItem(History),
+        };
         foreach (var item in Items)
             item.PropertyChanged += (s, e) =>
             {
@@ -52,6 +85,9 @@ public sealed class MainViewModel : ObservableObject
         _selected.IsSelected = true;
 
         RestartAsAdminCommand = new RelayCommand(_ => RestartAsAdmin());
+
+        History.UpdateFound += info => UpdateBadge = $"새 버전 {info.Tag}";
+        if (AppSettings.Load().AutoCheckUpdates) _ = History.CheckUpdateAsync(manual: false);
     }
 
     private static void RestartAsAdmin()

@@ -17,10 +17,11 @@
         </StackPanel>
 
         <UniformGrid Grid.Row="1" Rows="1" Margin="0,22,0,0">
-            <c:StatTile Margin="0,0,12,0" Label="전체 항목" Value="{Binding Total}" Glyph="&#xE71D;" Tone="{DynamicResource AccentBrush}" />
-            <c:StatTile Margin="0,0,12,0" Label="시작 시 실행" Value="{Binding EnabledCount}" Glyph="&#xE73E;" Tone="{DynamicResource SuccessBrush}" />
-            <c:StatTile Margin="0,0,12,0" Label="사용 안 함" Value="{Binding DisabledCount}" Glyph="&#xE7E8;" Tone="{DynamicResource SubTextBrush}" />
-            <c:StatTile Label="파일 없음" Value="{Binding MissingCount}" Glyph="&#xE7BA;" Tone="{DynamicResource DangerBrush}" />
+            <c:StatTile Margin="0,0,12,0" Label="전체" Value="{Binding Total}" Glyph="&#xE71D;" Tone="{DynamicResource AccentBrush}" />
+            <c:StatTile Margin="0,0,12,0" Label="켜짐" Value="{Binding EnabledCount}" Glyph="&#xE73E;" Tone="{DynamicResource SuccessBrush}" />
+            <c:StatTile Margin="0,0,12,0" Label="꺼짐" Value="{Binding DisabledCount}" Glyph="&#xE7E8;" Tone="{DynamicResource SubTextBrush}" />
+            <c:StatTile Margin="0,0,12,0" Label="파일 없음" Value="{Binding MissingCount}" Glyph="&#xE7BA;" Tone="{DynamicResource DangerBrush}" />
+            <c:StatTile Label="부팅 시간" Value="{Binding BootTimeText}" Glyph="&#xE916;" Tone="{DynamicResource WarnBrush}" />
         </UniformGrid>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,20,0,12">
@@ -82,6 +83,14 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Style="{StaticResource Cell}" Text="{Binding Command}" ToolTip="{Binding Command}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="부팅 영향" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Style="{StaticResource Cell}" Text="{Binding ImpactText}" ToolTip="Windows가 최근 30일간 기록한 시작 지연 시간 (관리자 권한 필요, 느린 항목만 기록됨)" />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

@@ -131,7 +131,7 @@ public sealed class StartupService
         catch { /* Task Scheduler not reachable */ }
     }
 
-    private static (string? Target, string Args) ResolveShortcut(string path)
+    internal static (string? Target, string Args) ResolveShortcut(string path)
     {
         if (!path.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase)) return (null, "");
         object? shell = null, lnk = null;

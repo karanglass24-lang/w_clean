@@ -90,6 +90,17 @@ public sealed class JunkService
             Path.Combine(Local, @"AMD\DxCache"),
         };
 
+        var doDirs = () => new[] { Path.Combine(WinDir, @"ServiceProfiles\NetworkService\AppData\Local\Microsoft\Windows\DeliveryOptimization\Cache") };
+        var devDirs = () => new[]
+        {
+            Path.Combine(Local, @"NuGet\v3-cache"),
+            Path.Combine(Local, @"NuGet\plugins-cache"),
+            Path.Combine(Local, "npm-cache"),
+            Path.Combine(Local, @"pip\Cache"),
+        };
+        // Rebuilding these costs time, so they start unchecked.
+        static JunkCategory Dev(JunkCategory c) { c.IsChecked = false; return c; }
+
         return new List<JunkCategory>
         {
             new("사용자 임시 파일", "%TEMP% 폴더의 임시 파일", InDirs(tempDirs), tempDirs),
@@ -108,6 +119,9 @@ public sealed class JunkService
             new("Whale 캐시", "네이버 웨일을 종료한 뒤 정리하세요", InDirs(() => ChromiumCacheDirs(Path.Combine(Local, @"Naver\Naver Whale\User Data"))),
                 () => ChromiumCacheDirs(Path.Combine(Local, @"Naver\Naver Whale\User Data"))),
             new("Firefox 캐시", "Firefox를 종료한 뒤 정리하세요", InDirs(FirefoxCacheDirs), FirefoxCacheDirs),
+            new("배달 최적화 캐시", "Windows 업데이트 공유용 캐시 (관리자 권한 필요)", InDirs(doDirs), doDirs),
+            new("메신저·앱 캐시", "Discord, Slack, Teams, VS Code 캐시 (앱을 종료한 뒤 정리하세요)", InDirs(AppCacheDirs), AppCacheDirs),
+            Dev(new("개발 도구 캐시", "NuGet, npm, pip 캐시 (다음 빌드 때 다시 내려받습니다)", InDirs(devDirs), devDirs)),
         };
     }
 
@@ -131,6 +145,18 @@ public sealed class JunkService
             foreach (var sub in new[] { "Cache", "Code Cache", "GPUCache", @"Service Worker\CacheStorage" })
                 yield return Path.Combine(profile, sub);
         }
+    }
+
+    private static IEnumerable<string> AppCacheDirs()
+    {
+        var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        string[] subs = { "Cache", "Code Cache", "GPUCache", @"Service Worker\CacheStorage" };
+        foreach (var app in new[] { "discord", "Slack", @"Microsoft\Teams", "Code" })
+            foreach (var sub in subs)
+                yield return Path.Combine(roaming, app, sub);
+        yield return Path.Combine(roaming, @"Code\CachedData");
+        yield return Path.Combine(roaming, @"Code\CachedExtensionVSIXs");
+        yield return Path.Combine(Local, @"Packages\MSTeams_8wekyb3d8bbwe\LocalCache");
     }
 
     private static IEnumerable<string> FirefoxCacheDirs()

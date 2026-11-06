@@ -14,6 +14,13 @@
         <DataTemplate DataType="{x:Type vm:JunkViewModel}"><views:JunkView /></DataTemplate>
         <DataTemplate DataType="{x:Type vm:RegistryViewModel}"><views:RegistryView /></DataTemplate>
         <DataTemplate DataType="{x:Type vm:LargeFileViewModel}"><views:LargeFileView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DuplicateViewModel}"><views:DuplicateView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DiskViewModel}"><views:DiskView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ProgramsViewModel}"><views:ProgramsView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ServicesViewModel}"><views:ServicesView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TidyViewModel}"><views:TidyView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BackupViewModel}"><views:BackupView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HistoryViewModel}"><views:HistoryView /></DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -42,7 +49,8 @@
                     </StackPanel>
                 </StackPanel>
 
-                <ItemsControl Grid.Row="1" ItemsSource="{Binding Items}">
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,-8,0" Padding="0,0,8,0">
+                <ItemsControl ItemsSource="{Binding Items}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <RadioButton GroupName="nav" Style="{StaticResource NavItem}"
@@ -51,6 +59,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                </ScrollViewer>
 
                 <StackPanel Grid.Row="2">
                     <Border Style="{StaticResource Card}" Padding="14,12" CornerRadius="10">
@@ -77,7 +86,13 @@
                         <ToggleButton Style="{StaticResource Switch}" HorizontalAlignment="Right"
                                       IsChecked="{Binding IsDark, Mode=TwoWay}" />
                     </Grid>
-                    <TextBlock Style="{StaticResource Small}" Margin="6,12,0,0" Text="{Binding Version}" />
+                    <StackPanel Orientation="Horizontal" Margin="6,12,0,0">
+                        <TextBlock Style="{StaticResource Small}" Text="{Binding Version}" VerticalAlignment="Center" />
+                        <Border Style="{StaticResource Chip}" Margin="10,0,0,0" Background="{DynamicResource SuccessSoftBrush}"
+                                Visibility="{Binding HasUpdateBadge, Converter={StaticResource BoolToVis}}">
+                            <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SuccessBrush}" Text="{Binding UpdateBadge}" />
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Border>
