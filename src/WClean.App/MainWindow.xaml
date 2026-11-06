@@ -1,0 +1,247 @@
+<Window x:Class="WClean.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="W Clean - 시작프로그램 · 쓰레기 · 레지스트리 · 대용량 파일 정리"
+        Width="1080" Height="720" MinWidth="860" MinHeight="520"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="16,7" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+        <Style x:Key="Hint" TargetType="TextBlock">
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style x:Key="Status" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,10,0,0" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserDeleteRows" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+            <Setter Property="RowHeaderWidth" Value="0" />
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#FFF4CE" Padding="14,8"
+                Visibility="{Binding ShowAdminWarning, Converter={StaticResource BoolToVis}}">
+            <TextBlock Foreground="#5C4A00" TextWrapping="Wrap"
+                       Text="관리자 권한이 아닙니다. 모든 사용자 시작프로그램, 레지스트리(HKLM), Windows 임시 폴더는 처리할 수 없습니다. 프로그램을 우클릭 → ‘관리자 권한으로 실행’ 하세요." />
+        </Border>
+
+        <TabControl Grid.Row="1" Margin="8" Padding="0">
+            <TabControl.Resources>
+                <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                    <Setter Property="Padding" Value="18,8" />
+                    <Setter Property="FontSize" Value="14" />
+                </Style>
+            </TabControl.Resources>
+
+            <!-- ============================ 시작프로그램 ============================ -->
+            <TabItem Header="시작프로그램">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="Windows 시작 시 자동 실행되는 프로그램(레지스트리 · 시작 폴더 · 작업 스케줄러)입니다. ‘사용 안 함’은 언제든 되돌릴 수 있고, ‘삭제’는 백업을 남기고 제거합니다. (여러 개 선택 가능)" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="새로고침" Command="{Binding Startup.RefreshCommand}" />
+                            <Button Content="사용 안 함" Command="{Binding Startup.DisableCommand}"
+                                    CommandParameter="{Binding SelectedItems, ElementName=StartupGrid}" />
+                            <Button Content="사용" Command="{Binding Startup.EnableCommand}"
+                                    CommandParameter="{Binding SelectedItems, ElementName=StartupGrid}" />
+                            <Button Content="삭제" Command="{Binding Startup.DeleteCommand}"
+                                    CommandParameter="{Binding SelectedItems, ElementName=StartupGrid}" />
+                            <Button Content="파일 위치 열기" Command="{Binding Startup.OpenLocationCommand}"
+                                    CommandParameter="{Binding SelectedItems, ElementName=StartupGrid}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1" x:Name="StartupGrid" ItemsSource="{Binding Startup.Entries}"
+                              IsReadOnly="True" SelectionMode="Extended">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                                        <Setter Property="Opacity" Value="0.55" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding TargetMissing}" Value="True">
+                                        <Setter Property="Foreground" Value="#D13438" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="이름" Binding="{Binding Name}" Width="240" />
+                            <DataGridTextColumn Header="상태" Binding="{Binding StatusText}" Width="80" />
+                            <DataGridTextColumn Header="위치" Binding="{Binding Source}" Width="230" />
+                            <DataGridTextColumn Header="명령" Binding="{Binding Command}" Width="*" />
+                            <DataGridTextColumn Header="비고" Binding="{Binding MissingText}" Width="80" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="2" Style="{StaticResource Status}" Text="{Binding Startup.Status}" />
+                </Grid>
+            </TabItem>
+
+            <!-- ============================ 쓰레기파일 ============================ -->
+            <TabItem Header="쓰레기파일 정리">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="임시 파일, 캐시, 휴지통, 크래시 덤프 등 지워도 안전한 파일을 정리합니다. 먼저 ‘검사’로 용량을 확인한 뒤 체크한 항목만 정리합니다." />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="검사" Command="{Binding Junk.ScanCommand}" />
+                            <Button Content="선택 항목 정리" Command="{Binding Junk.CleanCommand}" />
+                            <Button Content="모두 선택" Command="{Binding Junk.SelectAllCommand}" />
+                            <Button Content="모두 해제" Command="{Binding Junk.SelectNoneCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Junk.Categories}" SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="44">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="항목" Binding="{Binding Name}" IsReadOnly="True" Width="190" />
+                            <DataGridTextColumn Header="용량" Binding="{Binding SizeText}" IsReadOnly="True" Width="170" />
+                            <DataGridTextColumn Header="설명" Binding="{Binding Description}" IsReadOnly="True" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <DockPanel Grid.Row="2">
+                        <TextBlock DockPanel.Dock="Right" Style="{StaticResource Status}" Text="{Binding Junk.SelectedSummary}" Margin="16,10,0,0" FontWeight="SemiBold" />
+                        <TextBlock Style="{StaticResource Status}" Text="{Binding Junk.Status}" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- ============================ 레지스트리 ============================ -->
+            <TabItem Header="레지스트리 정리">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="삭제된 프로그램의 흔적, 존재하지 않는 파일을 가리키는 항목만 찾습니다. 삭제 전에 복원용 .reg 파일을 자동 저장하며, 더블클릭하면 되돌릴 수 있습니다." />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="검사" Command="{Binding Registry.ScanCommand}" />
+                            <Button Content="선택 항목 삭제" Command="{Binding Registry.FixCommand}" />
+                            <Button Content="모두 선택" Command="{Binding Registry.SelectAllCommand}" />
+                            <Button Content="모두 해제" Command="{Binding Registry.SelectNoneCommand}" />
+                            <Button Content="백업 폴더 열기" Command="{Binding Registry.OpenBackupFolderCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Registry.Issues}" SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="44">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="종류" Binding="{Binding Category}" IsReadOnly="True" Width="150" />
+                            <DataGridTextColumn Header="이름" Binding="{Binding Name}" IsReadOnly="True" Width="200" />
+                            <DataGridTextColumn Header="문제" Binding="{Binding Problem}" IsReadOnly="True" Width="280" />
+                            <DataGridTextColumn Header="레지스트리 경로" Binding="{Binding KeyPath}" IsReadOnly="True" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <DockPanel Grid.Row="2">
+                        <TextBlock DockPanel.Dock="Right" Style="{StaticResource Status}" Text="{Binding Registry.SelectedSummary}" Margin="16,10,0,0" FontWeight="SemiBold" />
+                        <TextBlock Style="{StaticResource Status}" Text="{Binding Registry.Status}" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- ============================ 대용량파일 ============================ -->
+            <TabItem Header="대용량파일 정리">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="폴더나 드라이브에서 큰 파일을 크기순으로 찾습니다. Windows 폴더는 검색·삭제 대상에서 제외됩니다. (최대 500개 표시)" />
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0" IsEditable="True" Margin="0,0,8,0"
+                                      ItemsSource="{Binding Large.Locations}"
+                                      Text="{Binding Large.SearchPath, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Grid.Column="1" Content="찾아보기…" Command="{Binding Large.BrowseCommand}" />
+                            <ComboBox Grid.Column="2" Width="120" Margin="0,0,8,0"
+                                      ItemsSource="{Binding Large.MinSizes}" DisplayMemberPath="Text"
+                                      SelectedItem="{Binding Large.SelectedMin}" />
+                            <Button Grid.Column="3" Content="검색" Command="{Binding Large.ScanCommand}" />
+                            <Button Grid.Column="4" Content="중지" Command="{Binding Large.CancelCommand}" Margin="0" />
+                        </Grid>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1" x:Name="LargeGrid" ItemsSource="{Binding Large.Results}"
+                              IsReadOnly="True" SelectionMode="Extended">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="크기" Binding="{Binding SizeText}" Width="100" />
+                            <DataGridTextColumn Header="파일 이름" Binding="{Binding Name}" Width="260" />
+                            <DataGridTextColumn Header="수정한 날짜" Binding="{Binding Modified, StringFormat=yyyy-MM-dd HH:mm}" Width="140" />
+                            <DataGridTextColumn Header="폴더" Binding="{Binding Directory}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="2">
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="선택 파일 삭제" Command="{Binding Large.DeleteCommand}"
+                                    CommandParameter="{Binding SelectedItems, ElementName=LargeGrid}" />
+                            <Button Content="파일 위치 열기" Command="{Binding Large.OpenLocationCommand}"
+                                    CommandParameter="{Binding SelectedItems, ElementName=LargeGrid}" />
+                            <CheckBox Content="휴지통으로 이동 (해제 시 영구 삭제)" VerticalAlignment="Center"
+                                      IsChecked="{Binding Large.UseRecycleBin}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Status}" Text="{Binding Large.Status}" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
