@@ -2,6 +2,8 @@
 
 **왕클린 (W Clean)** — Windows 11용 정리 도구 (C# / .NET 9 / WPF). 광고 없이 꼭 필요한 기능만 담은 구형 알약의 "시작프로그램 · 레지스트리 · 쓰레기파일 · 대용량파일 정리" 대체품입니다.
 
+만든 곳: [두목넷](https://dumok.net)
+
 ## 라이선스
 
 MIT (`LICENSE`). 사용한 오픈소스는 `THIRD-PARTY-NOTICES.md` 참고.
@@ -57,3 +59,10 @@ Inno Setup 6 필요.
 ```
 
 결과: `artifacts\WClean-0.2.1-win-x64-setup.exe` (한국어/영어, `Program Files\W Clean` 설치, 시작 메뉴 바로가기, 바탕화면 아이콘 선택).
+
+## 만든 사람
+
+왕두목 · 두목넷 dumok.net — 정보처리·사무자동화·컴활 자격증 온라인 강의
+
+- 학습 블로그: https://dumok.net/blog
+- 유튜브: https://www.youtube.com/@extudy
